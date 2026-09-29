@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#6B46C1">
+<title>وين أروح؟</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family:'Cairo', sans-serif;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height:100vh;
+  display:flex; justify-content:center; align-items:center;
+  padding:16px;
+  color:#333;
+}
+body::before {
+  content:''; position:fixed; top:-50%; left:-50%; width:200%; height:200%;
+  background: radial-gradient(circle at 20% 30%, rgba(107,70,193,0.3) 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, rgba(59,130,246,0.25) 0%, transparent 50%);
+  animation: bgFloat 20s ease-in-out infinite;
+  z-index:0; pointer-events:none;
+}
+@keyframes bgFloat {
+  0%,100% { transform: translate(0,0) rotate(0deg); }
+  50% { transform: translate(-5%,-5%) rotate(180deg); }
+}
+
+.container {
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(20px);
+  border-radius:28px;
+  padding:28px 22px;
+  max-width:440px; width:100%;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+  position:relative; z-index:1;
+  animation: containerIn 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes containerIn {
+  from { opacity:0; transform: translateY(30px) scale(0.95); }
+  to { opacity:1; transform: translateY(0) scale(1); }
+}
+
+.screen { display:none; }
+.screen.active { display:block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(15px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.logo-wrap { text-align:center; margin-bottom:20px; }
+.logo-icon {
+  font-size:64px; display:inline-block;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(107,70,193,0.3));
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+h1 {
+  font-size:28px; font-weight:900;
+  background: linear-gradient(135deg,#6B46C1,#3B82F6);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; text-align:center;
+  margin-bottom:6px; letter-spacing:-0.5px;
+}
+.subtitle {
+  text-align:center; color:#888;
+  margin-bottom:22px; font-size:14px;
+}
+
+.section-label {
+  display:flex; align-items:center; gap:8px;
+  margin:18px 0 12px; font-weight:700;
+  color:#1a1a2e; font-size:15px;
+}
+.section-label .num {
+  width:24px; height:24px;
+  background: linear-gradient(135deg,#6B46C1,#3B82F6);
+  color:#fff; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:900;
+}
+
+.options { display:grid; grid-template-columns: repeat(3,1fr); gap:10px; }
+.opt {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:16px 8px; background:#f5f5fa;
+  border:2px solid transparent; border-radius:16px;
+  cursor:pointer; font-size:13px; font-weight:600;
+  color:#444; font-family:inherit;
+  transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+.opt .icon { font-size:26px; transition: transform 0.25s; }
+.opt:active { transform: scale(0.95); }
+.opt.selected {
+  background: linear-gradient(135deg,#6B46C1,#3B82F6);
+  color:#fff; border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 8px 20px rgba(107,70,193,0.35);
+}
+.opt.selected .icon { transform: scale(1.15); }
+
+/* ===== بطاقة الموقع (الحالة 1: زر) ===== */
+.loc-card {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px; background:#f5f5fa;
+  border:2px dashed #ccc; border-radius:16px;
+  cursor:pointer; transition: all 0.25s;
+}
+.loc-card:active { transform: scale(0.98); }
+.loc-card .loc-icon {
+  width:40px; height:40px;
+  background: linear-gradient(135deg,#6B46C1,#3B82F6);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.loc-text { flex:1; }
+.loc-title { font-weight:700; font-size:14px; color:#1a1a2e; }
+.loc-status { font-size:12px; color:#888; margin-top:2px; }
+
+/* ===== بطاقة الموقع (الحالة 2: محدد) ===== */
+.loc-display {
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border:2px solid #10b981;
+  border-radius:16px;
+  animation: locIn 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes locIn {
+  from { opacity:0; transform: scale(0.9); }
+  to { opacity:1; transform: scale(1); }
+}
+.loc-display .loc-icon {
+  width:40px; height:40px;
+  background: linear-gradient(135deg,#10b981,#059669);
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(16,185,129,0); }
+}
+.loc-display .loc-info { flex:1; }
+.loc-display .loc-name {
+  font-weight:800; font-size:14px; color:#065f46;
+  display:flex; align-items:center; gap:6px;
+}
+.loc-display .loc-sub {
+  font-size:11px; color:#047857; margin-top:2px;
+}
+.loc-change {
+  background: transparent; border:none;
+  color:#059669; font-size:11px;
+  font-weight:700; cursor:pointer;
+  text-decoration:underline; padding:6px;
+  font-family:inherit;
+}
+
+.main-btn {
+  width:100%; margin-top:22px; padding:18px;
+  background: linear-gradient(135deg,#6B46C1,#3B82F6);
+  color:#fff; border:none; border-radius:18px;
+  font-size:17px; font-weight:800; font-family:inherit;
+  cursor:pointer; transition: all 0.3s;
+  box-shadow: 0 10px 25px rgba(107,70,193,0.4);
+}
+.main-btn:not(:disabled):active {
+  transform: scale(0.97);
+  box-shadow: 0 5px 15px rgba(107,70,193,0.5);
+}
+.main-btn:disabled {
+  background:#e0e0e6; box-shadow:none;
+  cursor:not-allowed; color:#aaa;
+}
+
+/* ===== شاشة النتيجة ===== */
+.result-card {
+  background: linear-gradient(135deg,#6B46C1 0%,#3B82F6 100%);
+  border-radius:24px;
+  padding:32px 22px;
+  text-align:center;
+  margin:10px 0 20px;
+  position:relative; overflow:hidden;
+  box-shadow: 0 20px 40px rgba(107,70,193,0.4);
+  animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes cardIn {
+  0% { opacity:0; transform: scale(0.8) rotate(-5deg); }
+  100% { opacity:1; transform: scale(1) rotate(0); }
+}
+.result-card::before {
+  content:''; position:absolute; top:-50%; left:-50%;
+  width:200%; height:200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+  animation: shine 3s ease-in-out infinite;
+}
+@keyframes shine {
+  0%,100% { transform: translate(-20%,-20%); }
+  50% { transform: translate(20%,20%); }
+}
+.result-emoji {
+  font-size:56px; margin-bottom:10px;
+  display:block; position:relative;
+  animation: pop 0.6s cubic-bezier(0.68,-0.55,0.27,1.55);
+}
+@keyframes pop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+.result-card h1 {
+  font-size:30px; font-weight:900;
+  color:#fff; -webkit-text-fill-color:#fff;
+  background:none; margin-bottom:8px;
+  position:relative; line-height:1.2;
+}
+.result-card p {
+  color: rgba(255,255,255,0.9);
+  font-size:14px; margin:4px 0; position:relative;
+}
+.result-card .reason {
+  font-style:italic; margin-top:14px !important;
+  padding-top:14px;
+  border-top:1px dashed rgba(255,255,255,0.4);
+  font-size:13px;
+}
+.result-card .distance {
+  display:inline-block; margin-top:14px;
+  padding:8px 16px;
+  background: rgba(255,255,255,0.2);
+  border-radius:20px;
+  font-weight:700; font-size:14px; color:#fff;
+  backdrop-filter: blur(10px);
+}
+
+.result-buttons { display:flex; flex-direction:column; gap:10px; }
+.navigate-btn {
+  padding:16px;
+  background: linear-gradient(135deg,#10b981,#059669);
+  color:#fff; border:none; border-radius:16px;
+  font-size:16px; font-weight:800; font-family:inherit;
+  cursor:pointer;
+  box-shadow: 0 8px 20px rgba(16,185,129,0.35);
+  transition: all 0.25s;
+}
+.navigate-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 10px rgba(16,185,129,0.5);
+}
+.change-btn {
+  padding:14px;
+  background:#fff5e6; color:#d97706;
+  border:2px solid #fde68a; border-radius:16px;
+  font-size:15px; font-weight:700; font-family:inherit;
+  cursor:pointer; transition: all 0.25s;
+}
+.change-btn:active { transform: scale(0.97); }
+.change-btn:disabled {
+  background:#f5f5f5; border-color:#eee;
+  color:#bbb; cursor:not-allowed;
+}
+.restart-btn {
+  padding:14px; background:transparent;
+  color:#888; border:none;
+  font-size:14px; font-weight:600; font-family:inherit;
+  cursor:pointer; text-decoration:underline;
+}
+.final-msg {
+  text-align:center; margin-top:16px;
+  font-size:14px; color:#6B46C1; font-weight:700;
+  padding:12px; background:#f3f0ff; border-radius:12px;
+}
+.hidden { display:none !important; }
+
+.loading-spinner {
+  display:inline-block;
+  width:16px; height:16px;
+  border:2px solid rgba(107,70,193,0.3);
+  border-top-color:#6B46C1;
+  border-radius:50%;
+  animation: spin 0.8s linear infinite;
+  margin-left:8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== الشاشة الرئيسية ===== -->
+  <div id="screen-input" class="screen active">
+    <div class="logo-wrap">
+      <span class="logo-icon">🤔</span>
+    </div>
+    <h1>وين أروح؟</h1>
+    <p class="subtitle">خلني أقرر لك. قرار واحد وبس.</p>
+
+    <div class="section-label">
+      <span class="num">1</span>
+      <span>📍 موقعك</span>
+    </div>
+
+    <!-- حالة 1: ما فيه موقع -->
+    <div class="loc-card" id="loc-btn">
+      <div class="loc-icon">📍</div>
+      <div class="loc-text">
+        <div class="loc-title">حدد موقعي</div>
+        <div class="loc-status" id="loc-status">اضغط لتحديد موقعك</div>
+      </div>
+    </div>
+
+    <!-- حالة 2: الموقع محدد -->
+    <div class="loc-display hidden" id="loc-display">
+      <div class="loc-icon">📍</div>
+      <div class="loc-info">
+        <div class="loc-name" id="loc-name">جاري التحديد<span class="loading-spinner"></span></div>
+        <div class="loc-sub" id="loc-sub">—</div>
+      </div>
+      <button class="loc-change" id="loc-change">تغيير</button>
+    </div>
+
+    <div class="section-label">
+      <span class="num">2</span>
+      <span>وش تبي؟</span>
+    </div>
+    <div class="options" id="type-options">
+      <button class="opt" data-value="مطعم"><span class="icon">🍔</span>آكل</button>
+      <button class="opt" data-value="كافيه"><span class="icon">☕</span>قهوة</button>
+      <button class="opt" data-value="جلسة"><span class="icon">🛋️</span>جلسة</button>
+    </div>
+
+    <div class="section-label">
+      <span class="num">3</span>
+      <span>ميزانيتك؟</span>
+    </div>
+    <div class="options" id="price-options">
+      <button class="opt" data-value="اقتصادي"><span class="icon">💵</span>اقتصادي</button>
+      <button class="opt" data-value="متوسط"><span class="icon">💰</span>متوسط</button>
+      <button class="opt" data-value="فاخر"><span class="icon">💎</span>فاخر</button>
+    </div>
+
+    <button id="decide-btn" class="main-btn" disabled>قرر لي ✨</button>
+  </div>
+
+  <!-- ===== شاشة النتيجة ===== -->
+  <div id="screen-result" class="screen">
+    <p style="text-align:center; color:#888; font-size:14px; font-weight:600; margin-bottom:16px;">القرار النهائي 👇</p>
+
+    <div class="result-card">
+      <span class="result-emoji" id="result-emoji">🎯</span>
+      <h1 id="place-name">—</h1>
+      <p id="place-details">—</p>
+      <p id="place-reason" class="reason">—</p>
+      <p id="place-distance" class="distance hidden">—</p>
+    </div>
+
+    <div class="result-buttons">
+      <button id="navigate-btn" class="navigate-btn">🚗 روح له (خرائط جوجل)</button>
+      <button id="change-btn" class="change-btn">🔄 غيّر (مرة وحدة بس)</button>
+      <button id="restart-btn" class="restart-btn">ابدأ من جديد</button>
+    </div>
+
+    <p id="final-msg" class="final-msg hidden"></p>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// قاعدة بيانات الأماكن (كل مكان له lat/lng)
+// ============================================================
+const places = [
+  { name: "فريج الطيبين", type: "مطعم", price: "متوسط", area: "الشاطئ", time: "7-23", lat: 26.4436, lng: 50.1040 },
+  { name: "شاورمر الجلوية", type: "مطعم", price: "اقتصادي", area: "الجلوية", time: "11-24", lat: 26.4330, lng: 50.0930 },
+  { name: "بروستد كريم", type: "مطعم", price: "اقتصادي", area: "الجلوية", time: "12-24", lat: 26.4310, lng: 50.0950 },
+  { name: "حضره المحيط", type: "مطعم", price: "متوسط", area: "الجلوية", time: "12-23", lat: 26.4469, lng: 50.0531 },
+  { name: "كلاسيكو دايت", type: "مطعم", price: "متوسط", area: "الفيصلية", time: "10-24", lat: 26.4028, lng: 50.0713 },
+  { name: "مكبوس إكسبرس", type: "مطعم", price: "اقتصادي", area: "الفيصلية", time: "11-24", lat: 26.4028, lng: 50.0713 },
+  { name: "كشنة", type: "مطعم", price: "فاخر", area: "الفيصلية", time: "12-23", lat: 26.4220, lng: 50.0780 },
+  { name: "Steak House", type: "مطعم", price: "فاخر", area: "العليا", time: "13-24", lat: 26.4150, lng: 50.0880 },
+  { name: "سد مأرب", type: "مطعم", price: "اقتصادي", area: "الجلوية", time: "0-24", lat: 26.4350, lng: 50.0910 },
+  { name: "لووب", type: "كافيه", price: "متوسط", area: "الشاطئ", time: "5-23", lat: 26.4450, lng: 50.1060 },
+  { name: "كافيه الفيصلية", type: "كافيه", price: "اقتصادي", area: "الفيصلية", time: "6-24", lat: 26.4200, lng: 50.0800 },
+  { name: "كافيه العليا", type: "كافيه", price: "فاخر", area: "العليا", time: "7-1", lat: 26.4150, lng: 50.0880 },
+  { name: "جلسة الشاطئ", type: "جلسة", price: "متوسط", area: "الشاطئ", time: "16-2", lat: 26.4436, lng: 50.1040 },
+  { name: "جلسة الفيصلية", type: "جلسة", price: "اقتصادي", area: "الفيصلية", time: "15-2", lat: 26.4200, lng: 50.0800 },
+  { name: "جلسة الجلوية", type: "جلسة", price: "فاخر", area: "الجلوية", time: "17-3", lat: 26.4330, lng: 50.0930 }
+];
+
+// ============================================================
+// إعدادات الذكاء
+// ============================================================
+const MAX_DISTANCE_KM = 15;   // أقصى مسافة نقبلها للمكان
+const TRAVEL_THRESHOLD_KM = 5; // إذا تحرك المستخدم أكثر من هذا نعتبره سافر
+const LOCATION_CACHE_KEY = 'user_location_v1';
+
+// ============================================================
+// حالة التطبيق
+// ============================================================
+let selectedType = null;
+let selectedPrice = null;
+let changeUsed = false;
+let currentResult = null;
+let userLat = null;
+let userLng = null;
+let currentAreaName = null;
+let watchId = null;
+
+// ============================================================
+// عناصر الواجهة
+// ============================================================
+const locBtn = document.getElementById('loc-btn');
+const locDisplay = document.getElementById('loc-display');
+const locName = document.getElementById('loc-name');
+const locSub = document.getElementById('loc-sub');
+const locChange = document.getElementById('loc-change');
+const decideBtn = document.getElementById('decide-btn');
+
+// ============================================================
+// اختيار الخيارات
+// ============================================================
+function setupOptions(opts, setter) {
+  opts.forEach(btn => {
+    btn.addEventListener('click', () => {
+      opts.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      setter(btn.dataset.value);
+      checkReady();
+    });
+  });
+}
+setupOptions(document.querySelectorAll('#type-options .opt'), v => selectedType = v);
+setupOptions(document.querySelectorAll('#price-options .opt'), v => selectedPrice = v);
+
+function checkReady() {
+  decideBtn.disabled = !(selectedType && selectedPrice && userLat !== null);
+}
+
+// ============================================================
+// حساب المسافة (Haversine)
+// ============================================================
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+            Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ============================================================
+// التحقق من وقت العمل
+// ============================================================
+function isOpen(timeStr) {
+  const now = new Date().getHours();
+  const [s, e] = timeStr.split('-').map(Number);
+  if (e === 24) return now >= s;
+  if (e < s) return now >= s || now < e; // مثل 17-3
+  return now >= s && now < e;
+}
+
+// ============================================================
+// جلب اسم المنطقة من الإحداثيات (Reverse Geocoding)
+// ============================================================
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&accept-language=ar`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const addr = data.address || {};
+    return addr.suburb || addr.neighbourhood || addr.city_district ||
+           addr.town || addr.city || addr.state || "موقعك الحالي";
+  } catch (e) {
+    return "موقعك الحالي";
+  }
+}
+
+// ============================================================
+// عرض الموقع (يخفي الزر ويظهر الكارت الأخضر)
+// ============================================================
+async function showLocation(lat, lng, fromCache = false) {
+  userLat = lat;
+  userLng = lng;
+
+  locBtn.classList.add('hidden');
+  locDisplay.classList.remove('hidden');
+  locName.innerHTML = 'جاري التحديد<span class="loading-spinner"></span>';
+  locSub.textContent = '—';
+
+  // جلب اسم المنطقة
+  currentAreaName = await reverseGeocode(lat, lng);
+  locName.textContent = currentAreaName;
+  locSub.textContent = `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  checkReady();
+
+  // احفظ في localStorage
+  localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+    lat, lng, area: currentAreaName, time: Date.now()
+  }));
+
+  // ابدأ مراقبة الحركة (لو ما كانت شغالة)
+  startWatching();
+}
+
+// ============================================================
+// زر "حدد موقعي"
+// ============================================================
+locBtn.addEventListener('click', () => {
+  const status = document.getElementById('loc-status');
+  if (!navigator.geolocation) {
+    status.textContent = "المتصفح ما يدعم تحديد الموقع";
+    return;
+  }
+  status.textContent = "جاري التحديد...";
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      await showLocation(pos.coords.latitude, pos.coords.longitude);
+    },
+    () => {
+      status.textContent = "ما قدرنا نحدد. تأكد من السماح بالوصول";
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+// ============================================================
+// زر "تغيير" — يخلي المستخدم يعيد التحديد
+// ============================================================
+locChange.addEventListener('click', () => {
+  localStorage.removeItem(LOCATION_CACHE_KEY);
+  userLat = null; userLng = null; currentAreaName = null;
+  locDisplay.classList.add('hidden');
+  locBtn.classList.remove('hidden');
+  document.getElementById('loc-status').textContent = "اضغط لتحديد موقعك";
+  checkReady();
+});
+
+// ============================================================
+// مراقبة السفر (Watch Position)
+// ============================================================
+function startWatching() {
+  if (watchId !== null) return;
+  if (!navigator.geolocation) return;
+
+  watchId = navigator.geolocation.watchPosition(
+    async (pos) => {
+      const newLat = pos.coords.latitude;
+      const newLng = pos.coords.longitude;
+
+      // احسب كم تحرك من آخر موقع
+      const moved = calcDistance(userLat, userLng, newLat, newLng);
+
+      // إذا تحرك أكثر من الحد، اعتبره سافر
+      if (moved > TRAVEL_THRESHOLD_KM) {
+        console.log(`📍 اكتشفنا سفر: تحرك ${moved.toFixed(1)} كم`);
+        await showLocation(newLat, newLng);
+      } else {
+        // حدّث الإحداثيات بهدوء
+        userLat = newLat;
+        userLng = newLng;
+      }
+    },
+    null,
+    { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 }
+  );
+}
+
+// ============================================================
+// تحميل الموقع المحفوظ عند فتح التطبيق
+// ============================================================
+async function loadCachedLocation() {
+  const cached = localStorage.getItem(LOCATION_CACHE_KEY);
+  if (!cached) return false;
+
+  try {
+    const data = JSON.parse(cached);
+    // إذا الإحداثيات قديمة (أكثر من 24 ساعة)، نتجاهلها
+    if (Date.now() - data.time > 24 * 60 * 60 * 1000) return false;
+
+    // حدّث معلومات المستخدم
+    userLat = data.lat;
+    userLng = data.lng;
+    currentAreaName = data.area;
+
+    locBtn.classList.add('hidden');
+    locDisplay.classList.remove('hidden');
+    locName.textContent = currentAreaName;
+    locSub.textContent = `${data.lat.toFixed(3)}, ${data.lng.toFixed(3)}`;
+    checkReady();
+    startWatching();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ============================================================
+// اختيار المكان (الأقرب أولاً)
+// ============================================================
+function pickPlace(exclude) {
+  let filtered = places.filter(p =>
+    p.type === selectedType &&
+    p.price === selectedPrice &&
+    isOpen(p.time) &&
+    p.name !== exclude
+  );
+
+  // إذا ما فيه نتائج، وسّع البحث
+  if (filtered.length === 0) {
+    filtered = places.filter(p =>
+      p.type === selectedType && isOpen(p.time) && p.name !== exclude
+    );
+  }
+  if (filtered.length === 0) return null;
+
+  // احسب المسافة لكل مكان
+  filtered.forEach(p => p._dist = calcDistance(userLat, userLng, p.lat, p.lng));
+
+  // فلتر الأماكن القريبة فقط (إذا فيه خيارات قريبة)
+  const nearby = filtered.filter(p => p._dist <= MAX_DISTANCE_KM);
+  const pool = nearby.length > 0 ? nearby : filtered;
+
+  // رتب حسب الأقرب واختر من أفضل 3
+  pool.sort((a, b) => a._dist - b._dist);
+  const topN = pool.slice(0, Math.min(3, pool.length));
+  return topN[Math.floor(Math.random() * topN.length)];
+}
+
+// ============================================================
+// عرض النتيجة
+// ============================================================
+const emojiMap = { "مطعم": "🍔", "كافيه": "☕", "جلسة": "🛋️" };
+
+function showResult(place) {
+  document.getElementById('screen-input').classList.remove('active');
+  document.getElementById('screen-result').classList.add('active');
+
+  const emojiEl = document.getElementById('result-emoji');
+  const distEl = document.getElementById('place-distance');
+  const finalEl = document.getElementById('final-msg');
+  finalEl.classList.add('hidden');
+
+  if (!place) {
+    emojiEl.textContent = "😔";
+    document.getElementById('place-name').textContent = "ما لقيت مكان";
+    document.getElementById('place-details').textContent = "جرب تغير خياراتك";
+    document.getElementById('place-reason').textContent = "";
+    distEl.classList.add('hidden');
+    return;
+  }
+
+  currentResult = place;
+  emojiEl.textContent = emojiMap[place.type] || "🎯";
+  document.getElementById('place-name').textContent = place.name;
+  document.getElementById('place-details').textContent = `${place.type} • ${place.price} • ${place.area}`;
+  document.getElementById('place-reason').textContent = "اخترته لأنه قريب منك، مفتوح الحين، وسعره يناسبك";
+
+  if (place._dist !== undefined) {
+    distEl.textContent = `📍 يبعد عنك ${place._dist.toFixed(1)} كم`;
+    distEl.classList.remove('hidden');
+  } else {
+    distEl.classList.add('hidden');
+  }
+}
+
+// ============================================================
+// أحداث الأزرار
+// ============================================================
+decideBtn.addEventListener('click', () => {
+  showResult(pickPlace());
+  changeUsed = false;
+  document.getElementById('change-btn').disabled = false;
+  document.getElementById('final-msg').classList.add('hidden');
+});
+
+document.getElementById('navigate-btn').addEventListener('click', () => {
+  if (!currentResult) return;
+  const q = encodeURIComponent(currentResult.name + " الدمام");
+  window.location.href = "https://www.google.com/maps/search/?api=1&query=" + q;
+});
+
+document.getElementById('change-btn').addEventListener('click', () => {
+  if (changeUsed) return;
+  const newPlace = pickPlace(currentResult ? currentResult.name : null);
+  const finalEl = document.getElementById('final-msg');
+  if (newPlace) {
+    showResult(newPlace);
+    finalEl.classList.remove('hidden');
+    finalEl.textContent = "خلاص، القرار لك الآن 😌";
+  } else {
+    finalEl.classList.remove('hidden');
+    finalEl.textContent = "ما فيه بديل ثاني، هذا القرار النهائي";
+  }
+  changeUsed = true;
+  document.getElementById('change-btn').disabled = true;
+});
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  selectedType = selectedPrice = null;
+  currentResult = null;
+  changeUsed = false;
+  document.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+  decideBtn.disabled = true;
+  document.getElementById('change-btn').disabled = false;
+  document.getElementById('final-msg').classList.add('hidden');
+  document.getElementById('screen-result').classList.remove('active');
+  document.getElementById('screen-input').classList.add('active');
+});
+
+// ============================================================
+// التهيئة عند فتح التطبيق
+// ============================================================
+(async function init() {
+  // حاول تحميل الموقع المحفوظ
+  const cached = await loadCachedLocation();
+  if (!cached) {
+    // إذا ما فيه موقع محفوظ، لا نسأل — نخلي الزر للمستخدم
+    console.log("📍 في انتظار المستخدم يحدد موقعه");
+  }
+})();
+</script>
+</body>
+</html>
